@@ -24,7 +24,7 @@ app.use(
   }),
 );
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3000;
 
 // Логування часу
 app.use((req, res, next) => {
@@ -60,8 +60,7 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   console.error('Error:', err.message);
   res.status(500).json({
-    message: 'Internal Server Error',
-    error: err.message,
+    message: err.message,
   });
 });
 
