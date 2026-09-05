@@ -1,70 +1,36 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import pino from 'pino-http';
-
-const app = express();
-// Middleware
-app.use(express.json());
-app.use(cors());
-app.use(
-  pino({
-    level: 'info',
-    transport: {
-      target: 'pino-pretty',
-      options: {
-        colorize: true,
-        translateTime: 'HH:MM:ss',
-        ignore: 'pid,hostname',
-        messageFormat:
-          '{req.method} {req.url} {res.statusCode} - {responseTime}ms',
-        hideObject: true,
-      },
-    },
-  }),
-);
+import { connectMongoDB } from './db/connectMongoDB.js';
+import { logger } from './middleware/logger.js';
+import { notFoundHandler } from './middleware/notFoundHandler.js';
+import { errorHandler } from './middleware/errorHandler.js';
+import notesRoutes from './routes/notesRoutes.js';
 
 const PORT = process.env.PORT || 3000;
 
-// Логування часу
-app.use((req, res, next) => {
-  console.log(`Time: ${new Date().toLocaleString()}`);
-  next();
-});
+const startServer = async () => {
+  await connectMongoDB();
 
-// Кореневий маршрут
-app.get('/notes', (req, res) => {
-  res.status(200).json({ message: 'Retrieved all notes' });
-});
+  const app = express();
 
-// Конкретна нотатка за id
-app.get('/notes/:noteId', (req, res) => {
-  const noteId = Number(req.params.noteId);
-  res.status(200).json({
-    message: 'Retrieved note with ID: id_param'.replace('id_param', noteId),
+  // Middleware
+  app.use(logger);
+  app.use(express.json());
+  app.use(cors());
+
+  // Маршрути
+  app.use(notesRoutes);
+
+  // Обробка неіснуючих маршрутів
+  app.use(notFoundHandler);
+
+  // Глобальна обробка помилок
+  app.use(errorHandler);
+
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
   });
-});
+};
 
-// Маршрут для тестування middleware помилки
-app.get('/test-error', (req, res) => {
-  // Штучна помилка для прикладу
-  throw new Error('Simulated server error');
-});
-
-// Middleware 404 (після всіх маршрутів)
-app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found' });
-});
-
-// Middleware для обробки помилок (останнє)
-app.use((err, req, res, next) => {
-  console.error('Error:', err.message);
-  res.status(500).json({
-    message: err.message,
-  });
-});
-
-// Запуск сервера
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+startServer();
