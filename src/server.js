@@ -6,6 +6,7 @@ import { logger } from './middleware/logger.js';
 import { notFoundHandler } from './middleware/notFoundHandler.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import notesRoutes from './routes/notesRoutes.js';
+import { errors } from 'celebrate';
 
 const PORT = process.env.PORT || 3000;
 
@@ -14,18 +15,16 @@ const startServer = async () => {
 
   const app = express();
 
-  // Middleware
   app.use(logger);
   app.use(express.json());
   app.use(cors());
 
-  // Маршрути
   app.use(notesRoutes);
 
-  // Обробка неіснуючих маршрутів
   app.use(notFoundHandler);
 
-  // Глобальна обробка помилок
+  app.use(errors());
+
   app.use(errorHandler);
 
   app.listen(PORT, () => {
