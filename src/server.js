@@ -8,6 +8,7 @@ import { notFoundHandler } from './middleware/notFoundHandler.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import notesRoutes from './routes/notesRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 import { errors } from 'celebrate';
 
 const PORT = process.env.PORT || 3000;
@@ -25,6 +26,7 @@ const startServer = async () => {
 
   // Маршрути
   app.use(authRoutes);
+  app.use(userRoutes);
   app.use(notesRoutes);
 
   // Обробка неіснуючих маршрутів
